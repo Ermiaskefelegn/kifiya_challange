@@ -1,17 +1,23 @@
 class Constants {
-  // Base URL for the OpenWeatherMap API
-  static const String baseUrl = 'https://api.openweathermap.org/data/2.5/';
+  static const String baseUrl = 'https://challenge-api.qena.dev';
+  static const String apiVersion = '/api';
 
-  // Base URL for fetching weather icons from OpenWeatherMap
-  static const String weatherIconbaseUrl = 'https://openweathermap.org/img/wn/';
+  // Auth endpoints
+  static const String login = '$apiVersion/auth/login';
+  static const String register = '$apiVersion/auth/register';
+  static const String refreshToken = '$apiVersion/auth/refresh-token';
 
-  // Default latitude and longitude for weather data (e.g., London coordinates)
-  static const double lat = 51.51494225418024;
-  static const double lon = -0.12363193061883422;
+  // Account endpoints
+  static const String accounts = '$apiVersion/accounts';
+  static const String createAccount = '$apiVersion/accounts';
+  static const String transfer = '$apiVersion/accounts/transfer';
+  static const String payBill = '$apiVersion/accounts/pay-bill';
 
-  // Sentry DSN for error tracking and monitoring
-  static const String sentryDsn = 'SENTRY_DSN';
+  // Transaction endpoints
+  static const String transactions = '$apiVersion/transactions';
 
-  // API key for accessing OpenWeatherMap services
-  static const String weatherApiKey = 'WEATHER_API_KEY';
+  // Headers
+  static const String contentType = 'application/json';
+  static const String authorization = 'Authorization';
+  static const String bearer = 'Bearer';
 }

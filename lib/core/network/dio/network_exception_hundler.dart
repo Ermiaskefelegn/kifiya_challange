@@ -3,65 +3,58 @@ import 'package:equatable/equatable.dart';
 import 'dart:io';
 
 class NetworkException extends Equatable implements Exception {
-  late final String message; // Error message describing the exception
-  late final int?
-      statusCode; // HTTP status code associated with the error, if available
+  final String message;
+  final int? statusCode;
 
-  // Constructor to create a NetworkException from a DioException
-  NetworkException.fromDioError(DioException dioException) {
-    statusCode = dioException.response?.statusCode;
+  const NetworkException._(this.message, this.statusCode);
 
-    // Handle different types of Dio exceptions
+  // For Dio errors
+  NetworkException.fromDioError(DioException dioException)
+    : message = _mapDioMessage(dioException),
+      statusCode = dioException.response?.statusCode;
+
+  // For unexpected errors
+  const NetworkException.custom({required this.message, required this.statusCode});
+
+  static String _mapDioMessage(DioException dioException) {
     switch (dioException.type) {
       case DioExceptionType.badResponse:
-        // Error due to an invalid HTTP response
-        message =
-            'Received invalid response with status code: ${dioException.response?.statusCode}';
-        break;
-
+        return 'Received invalid response with status code: ${dioException.response?.statusCode}';
       case DioExceptionType.badCertificate:
-        // Error due to an invalid SSL certificate
-        message = 'The certificate provided is invalid';
-        break;
-
+        return 'The certificate provided is invalid';
       case DioExceptionType.connectionTimeout:
-        // Error due to a connection timeout
-        message = 'Connection to the server timed out';
-        break;
-
+        return 'Connection to the server timed out';
       case DioExceptionType.sendTimeout:
-        // Error due to a timeout while sending the request
-        message = 'Timeout occurred while sending the request';
-        break;
-
+        return 'Timeout occurred while sending the request';
       case DioExceptionType.receiveTimeout:
-        // Error due to a timeout while receiving data
-        message = 'Timeout occurred while receiving data from the server';
-        break;
-
+        return 'Timeout occurred while receiving data from the server';
       case DioExceptionType.cancel:
-        // Error due to the request being cancelled
-        message = 'The request to the server was cancelled';
-        break;
-
+        return 'The request to the server was cancelled';
       case DioExceptionType.connectionError:
-        // Error due to a network connection issue
-        if (dioException.error is SocketException) {
-          message =
-              'No internet connection. Please check your network settings';
-        } else {
-          message = 'Network connection error occurred';
-        }
-        break;
-
+        return dioException.error is SocketException
+            ? 'No internet connection. Please check your network settings'
+            : 'Network connection error occurred';
       case DioExceptionType.unknown:
-        // Error due to an unknown issue
-        message = 'An unknown error occurred';
-        break;
+        return 'An unknown error occurred';
     }
   }
 
   @override
-  List<Object?> get props =>
-      [message, statusCode]; // Equatable properties for comparison
+  List<Object?> get props => [message, statusCode];
+}
+
+NetworkException parseDioError(Object error) {
+  if (error is DioException) {
+    // If already wrapped with NetworkException inside interceptor
+    if (error.error is NetworkException) {
+      return error.error as NetworkException;
+    }
+    return NetworkException.fromDioError(error);
+  } else {
+    // Non-Dio errors → fallback
+    return NetworkException.custom(
+      message: error.toString(),
+      statusCode: -1, // custom code for unexpected errors
+    );
+  }
 }

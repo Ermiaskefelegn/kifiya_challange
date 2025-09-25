@@ -16,8 +16,10 @@ class DioClient {
     )..interceptors.add(ApiInterceptor()); // Add custom API interceptor for request/response handling
   }
 
-  // Method to perform GET requests
-  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
-    return await _dio.get(path, queryParameters: queryParameters);
-  }
+  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) =>
+      _dio.get(path, queryParameters: queryParameters);
+  Future<Response> post(String path, {Map<String, dynamic>? data}) => _dio.post(path, data: data);
+  Future<Response> put(String path, {Map<String, dynamic>? data}) => _dio.put(path, data: data);
+  Future<Response> delete(String path, {Map<String, dynamic>? data}) => _dio.delete(path, data: data);
+  Future<Response> patch(String path, {Map<String, dynamic>? data}) => _dio.patch(path, data: data);
 }
