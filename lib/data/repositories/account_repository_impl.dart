@@ -1,7 +1,7 @@
 import '../../domain/entities/account.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../datasources/local/local_data_source.dart';
-import '../datasources/remote/api_service.dart';
+import '../datasources/remote/api_remote_datasource.dart';
 
 class AccountRepositoryImpl implements AccountRepository {
   final ApiRemoteDataSource apiRemoteDataSource;

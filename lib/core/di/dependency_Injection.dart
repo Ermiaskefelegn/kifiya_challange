@@ -10,7 +10,7 @@ import 'package:kifiya_challenge/core/services/secure_storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/datasources/local/local_data_source.dart';
-import '../../data/datasources/remote/api_service.dart';
+import '../../data/datasources/remote/api_remote_datasource.dart';
 import '../../data/datasources/remote/auth_datasource.dart';
 import '../../data/repositories/account_repository_impl.dart';
 import '../../data/repositories/auth_repository_impl.dart';
@@ -45,7 +45,9 @@ Future<void> configureDependencies() async {
   getIt.registerSingletonAsync<HiveStorageService>(() async {
     return await HiveStorageService.getInstance();
   });
+  getIt.registerLazySingleton(() => LocalDataSourceImpl(getIt()));
   getIt.registerSingletonAsync<LogService>(() => LogService.getInstance());
+  getIt.registerLazySingleton<ApiRemoteDataSource>(() => ApiRemoteDataSource(dioClient: getIt(), logService: getIt()));
 
   // Repositories
   getIt.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(getIt()));
@@ -54,9 +56,9 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<TransferRepository>(() => TransferRepositoryImpl(getIt(), getIt()));
 
   // Use cases
-  getIt.registerLazySingleton(() => GetAccounts(getIt()));
-  getIt.registerLazySingleton(() => GetTransactions(getIt()));
-  getIt.registerLazySingleton(() => TransferMoney(getIt()));
+  getIt.registerLazySingleton(() => GetAccounts(getIt<AccountRepository>()));
+  getIt.registerLazySingleton(() => GetTransactions(getIt<TransactionRepository>()));
+  getIt.registerLazySingleton(() => TransferMoney(getIt<TransferRepository>()));
 
   // BLoCs
   getIt.registerFactory(() => AuthBloc(getIt(), getIt(), getIt()));

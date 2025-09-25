@@ -2,7 +2,7 @@ import '../models/transfer/transfer_request.dart';
 import '../../domain/entities/transfer.dart';
 import '../../domain/repositories/transfer_repository.dart';
 import '../datasources/local/local_data_source.dart';
-import '../datasources/remote/api_service.dart';
+import '../datasources/remote/api_remote_datasource.dart';
 
 class TransferRepositoryImpl implements TransferRepository {
   final ApiRemoteDataSource apiRemoteDataSource;
