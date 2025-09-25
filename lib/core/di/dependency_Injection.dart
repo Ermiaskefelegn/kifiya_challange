@@ -45,9 +45,19 @@ Future<void> configureDependencies() async {
   getIt.registerSingletonAsync<HiveStorageService>(() async {
     return await HiveStorageService.getInstance();
   });
-  getIt.registerLazySingleton(() => LocalDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<LocalDataSource>(() => LocalDataSourceImpl(getIt()));
   getIt.registerSingletonAsync<LogService>(() => LogService.getInstance());
-  getIt.registerLazySingleton<ApiRemoteDataSource>(() => ApiRemoteDataSource(dioClient: getIt(), logService: getIt()));
+  getIt.registerLazySingleton<ApiRemoteDataSource>(
+    () => ApiRemoteDataSource(dioClient: getIt<DioClient>(), logService: getIt<LogService>()),
+  );
+  getIt.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSource(
+      dioClient: getIt<DioClient>(),
+      secureStorageService: getIt<SecureStorageService>(),
+      hiveStorageService: getIt<HiveStorageService>(),
+      logService: getIt<LogService>(),
+    ),
+  );
 
   // Repositories
   getIt.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(getIt()));

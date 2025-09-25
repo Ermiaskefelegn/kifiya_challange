@@ -1,0 +1,164 @@
+# Kifiya Challenge (Flutter)
+
+Cross‑platform Flutter banking-style demo targeting Android, iOS, Web, Windows, macOS & Linux.
+
+## Table of Contents
+- [Features](#features)
+- [Architecture Overview](#architecture-overview)
+- [Key Files](#key-files)
+- [Setup](#setup)
+- [Running](#running)
+- [Environment / Secrets](#environment--secrets)
+- [Dependency Injection](#dependency-injection)
+- [State Management (BLoC)](#state-management-bloc)
+- [Theming](#theming)
+- [Data & Persistence](#data--persistence)
+- [Testing](#testing)
+- [Code Quality](#code-quality)
+- [Adding a New Feature](#adding-a-new-feature)
+- [Troubleshooting](#troubleshooting)
+
+
+## Features
+- BLoC state management (flutter_bloc) for Accounts, Auth, Transactions, Transfers (see blocs under [`presentation/bloc`](lib/presentation/bloc))
+- Centralized dependency injection via [`configureDependencies`](lib/core/di/dependency_Injection.dart)
+- Multi‑platform plugin support (secure storage, shared preferences, path provider, package info)
+- Hive local storage initialization in [`main`](lib/main.dart)
+- Central theming in [`AppTheme`](lib/core/theme/app_theme.dart)
+- Sentry integration capability (native SDK artifacts present)
+- Modular, testable layers (UI → BLoC → Repositories/Services)
+
+## Architecture Overview
+```
+UI (Pages / Widgets)
+    ↓ (Events)
+BLoC (Business logic & state)
+    ↓ (Calls)
+Repositories / Services
+    ↓
+Data sources (Local / Remote / Secure storage)
+```
+Cross-cutting concerns:
+- Dependency Injection container
+- Theming
+- Error monitoring
+- Serialization (json_serializable placeholder; build_runner configured)
+
+## Key Files
+- Entry point: [`lib/main.dart`](lib/main.dart)
+- Dependency injection: [`lib/core/di/dependency_Injection.dart`](lib/core/di/dependency_Injection.dart)
+- Theme: [`lib/core/theme/app_theme.dart`](lib/core/theme/app_theme.dart)
+- Example Bloc: [`presentation/bloc/account/account_bloc.dart`](lib/presentation/bloc/account/account_bloc.dart)
+- Project manifest: [`pubspec.yaml`](pubspec.yaml)
+- Analysis rules: [`analysis_options.yaml`](analysis_options.yaml)
+
+## Setup
+```sh
+# Clone
+git clone <repo_url>
+cd kifiya_challenge
+
+# Flutter dependencies
+flutter pub get
+```
+Verify toolchain:
+```sh
+flutter doctor
+```
+
+(Optional) Enable desktop targets:
+```sh
+flutter config --enable-macos-desktop --enable-windows-desktop --enable-linux-desktop
+```
+
+## Running
+Generic (auto device):
+```sh
+flutter run
+```
+Specific platforms:
+```sh
+flutter run -d chrome
+flutter run -d ios
+flutter run -d android
+flutter run -d macos
+flutter run -d linux
+flutter run -d windows
+```
+
+## Environment / Secrets
+Use `--dart-define` for runtime config:
+```sh
+flutter run --dart-define API_BASE_URL=https://api.example.com --dart-define SENTRY_DSN=<dsn>
+```
+Suggested defines:
+- `API_BASE_URL`
+- `SENTRY_DSN`
+- `APP_FLAVOR`
+
+In CI builds add to build commands:
+```sh
+flutter build apk --release --dart-define APP_FLAVOR=prod
+```
+
+## Dependency Injection
+All registrations centralized in [`dependency_Injection.dart`](lib/core/di/dependency_Injection.dart).
+Bootstrap sequence (already applied in [`main.dart`](lib/main.dart)):
+```dart
+await configureDependencies();
+runApp(const BankingApp());
+```
+Retrieve instances with `getIt<T>()`.
+
+## State Management (BLoC)
+Example initialization in [`BankingApp` widget](lib/main.dart):
+```dart
+MultiBlocProvider(
+  providers: [
+    BlocProvider(create: (_) => getIt<AccountBloc>()..add(LoadAccounts())),
+    BlocProvider(create: (_) => getIt<TransactionBloc>()..add(LoadTransactions())),
+    BlocProvider(create: (_) => getIt<TransferBloc>()),
+    BlocProvider(create: (_) => getIt<AuthBloc>()),
+  ],
+  child: MaterialApp(...),
+)
+```
+Guidelines:
+- Keep side effects in blocs, not widgets.
+- Emit immutable states.
+- Name events verb-first (e.g. `LoadAccounts`).
+
+## Theming
+Extend or modify theme in [`app_theme.dart`](lib/core/theme/app_theme.dart).
+Attach via `theme: AppTheme.lightTheme` in [`MaterialApp`](lib/main.dart).
+
+## Data & Persistence
+- Hive initialized early in [`main`](lib/main.dart).
+- Prefer repositories to wrap raw Hive box access.
+- Use `flutter_secure_storage` (present in generated registrant) for secrets (token storage).
+
+## Testing
+Unit / widget tests go under [`test/`](test/).
+Run:
+```sh
+flutter test
+```
+Add bloc tests with `bloc_test` (declared in [`pubspec.yaml`](pubspec.yaml)).
+
+## Code Quality
+Static analysis / formatting:
+```sh
+flutter analyze
+dart format --set-exit-if-changed .
+```
+Ruleset: [`analysis_options.yaml`](analysis_options.yaml).
+
+## Adding a New Feature
+1. Define model + serialization (optionally with `json_serializable`).
+2. Add service / repository; register in [`dependency_Injection.dart`](lib/core/di/dependency_Injection.dart).
+3. Create Bloc (events, states).
+4. Provide Bloc in widget tree.
+5. Write tests.
+6. Add environment keys if required (`--dart-define`).
+7. Update this README if architecture changes.
+
