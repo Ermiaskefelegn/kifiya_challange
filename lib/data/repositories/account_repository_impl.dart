@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import '../../domain/entities/account.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../datasources/local/local_data_source.dart';
@@ -13,9 +15,11 @@ class AccountRepositoryImpl implements AccountRepository {
   Future<List<Account>> getAccounts() async {
     try {
       final accounts = await apiRemoteDataSource.getAccounts();
+      log('Fetched accounts from remote data source: $accounts');
       await localDataSource.cacheAccounts(accounts);
       return accounts;
     } catch (e) {
+      log('Error fetching accounts from remote data source: $e');
       return await localDataSource.getCachedAccounts();
     }
   }

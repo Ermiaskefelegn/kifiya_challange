@@ -14,6 +14,7 @@ abstract class AuthRepository {
     String? email,
     required String phoneNumber,
   });
+  Future<dynamic> refreshtoken() async {}
 }
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -45,5 +46,10 @@ class AuthRepositoryImpl implements AuthRepository {
       phoneNumber: phoneNumber,
     );
     return await _authRemoteDataSource.register(request);
+  }
+
+  @override
+  Future<dynamic> refreshtoken() async {
+    return await _authRemoteDataSource.refreshtoken();
   }
 }

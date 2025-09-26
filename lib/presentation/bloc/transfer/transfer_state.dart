@@ -13,6 +13,15 @@ class TransferLoading extends TransferState {}
 
 class TransferSuccess extends TransferState {}
 
+class TransferFailure extends TransferState {
+  final String error;
+
+  const TransferFailure(this.error);
+
+  @override
+  List<Object> get props => [error];
+}
+
 class TransferError extends TransferState {
   final String message;
 

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
@@ -18,6 +20,7 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     emit(AccountLoading());
     try {
       final accounts = await getAccounts();
+      log('Fetched accounts: $accounts');
       emit(AccountLoaded(accounts));
     } catch (e) {
       emit(AccountError(e.toString()));

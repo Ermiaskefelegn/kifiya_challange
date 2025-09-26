@@ -8,6 +8,7 @@ import 'package:kifiya_challenge/core/services/hive_storage_service.dart';
 import 'package:kifiya_challenge/core/services/log_service.dart';
 import 'package:kifiya_challenge/core/services/secure_storage_service.dart';
 import 'package:kifiya_challenge/domain/usecases/login_user.dart';
+import 'package:kifiya_challenge/domain/usecases/refresh_token.dart';
 import 'package:kifiya_challenge/domain/usecases/register_user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -36,7 +37,7 @@ Future<void> configureDependencies() async {
   // Network
 
   getIt.registerLazySingleton(() => Dio(BaseOptions(connectTimeout: const Duration(seconds: 5))));
-  getIt.registerLazySingleton(() => DioClient());
+  getIt.registerLazySingleton(() => DioClient(getIt<SecureStorageService>()));
 
   // External dependencies
   final sharedPreferences = await SharedPreferences.getInstance();
@@ -53,7 +54,11 @@ Future<void> configureDependencies() async {
     () => ApiRemoteDataSource(dioClient: getIt<DioClient>(), logService: getIt<LogService>()),
   );
   getIt.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSource(dioClient: getIt<DioClient>(), logService: getIt<LogService>()),
+    () => AuthRemoteDataSource(
+      dioClient: getIt<DioClient>(),
+      logService: getIt<LogService>(),
+      secureStorageService: getIt<SecureStorageService>(),
+    ),
   );
 
   // Repositories
@@ -68,11 +73,17 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton(() => TransferMoney(getIt<TransferRepository>()));
   getIt.registerFactory<LoginUser>(() => LoginUser(getIt<AuthRepository>()));
   getIt.registerFactory<RegisterUser>(() => RegisterUser(getIt<AuthRepository>()));
+  getIt.registerFactory<RefreshToken>(() => RefreshToken(getIt<AuthRepository>()));
 
   // BLoCs
   getIt.registerFactory<AuthBloc>(
-    () =>
-        AuthBloc(getIt<LoginUser>(), getIt<RegisterUser>(), getIt<SecureStorageService>(), getIt<HiveStorageService>()),
+    () => AuthBloc(
+      getIt<LoginUser>(),
+      getIt<RegisterUser>(),
+      getIt<SecureStorageService>(),
+      getIt<HiveStorageService>(),
+      getIt<RefreshToken>(),
+    ),
   );
   getIt.registerFactory(() => AccountBloc(getIt<GetAccounts>()));
   getIt.registerFactory(() => TransactionBloc(getIt<GetTransactions>()));
