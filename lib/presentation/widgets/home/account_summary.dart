@@ -7,60 +7,67 @@ class AccountSummary extends StatelessWidget {
   final List<Account> accounts;
   final VoidCallback onViewAll;
 
-  const AccountSummary({Key? key, required this.accounts, required this.onViewAll}) : super(key: key);
+  const AccountSummary({super.key, required this.accounts, required this.onViewAll});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'My Accounts',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-            ),
-            TextButton(
-              onPressed: onViewAll,
-              child: const Text(
-                'View All',
-                style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.primary),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'My Accounts',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2))],
-          ),
-          child: Column(
-            children: accounts.take(2).map((account) {
-              return CustomListTile(
-                leading: _buildAccountIcon(account.type),
-                title: account.name,
-                subtitle: account.number,
-                trailing: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'ETB ${account.balance.toStringAsFixed(0)}',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                    ),
-                    Text(
-                      'last updated ${account.lastUpdated}',
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                    ),
-                  ],
+              TextButton(
+                onPressed: onViewAll,
+                child: const Text(
+                  'View All',
+                  style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
                 ),
-              );
-            }).toList(),
+              ),
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: AppSpacing.md),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2))],
+            ),
+            child: Column(
+              children: accounts.take(2).map((account) {
+                return CustomListTile(
+                  leading: _buildAccountIcon(account.type),
+                  title: account.name,
+                  subtitle: account.number,
+                  trailing: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'ETB ${account.balance.toStringAsFixed(0)}',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      ),
+                      Text(
+                        'last updated ${account.lastUpdated}',
+                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

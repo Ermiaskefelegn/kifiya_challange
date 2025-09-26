@@ -4,7 +4,7 @@ import '../../../core/theme/app_theme.dart';
 class QuickActions extends StatelessWidget {
   final Function(String) onActionTap;
 
-  const QuickActions({Key? key, required this.onActionTap}) : super(key: key);
+  const QuickActions({super.key, required this.onActionTap});
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +30,7 @@ class QuickActions extends StatelessWidget {
             height: 64,
             decoration: BoxDecoration(
               color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(30),
             ),
             child: Icon(icon, color: AppColors.primary, size: 28),
           ),

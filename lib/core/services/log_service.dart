@@ -1,4 +1,3 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logger/logger.dart';
 
 class LogService {
@@ -46,13 +45,5 @@ class LogService {
 
   void fatal(String message, [dynamic error, StackTrace? stackTrace]) {
     _logger.f(message, error: error, stackTrace: stackTrace);
-  }
-}
-
-class ProductionFilter extends LogFilter {
-  @override
-  bool shouldLog(LogEvent event) {
-    final isProduction = dotenv.env['IS_PRODUCTION']?.toLowerCase() == 'true';
-    return !isProduction; // Log only in non-production environments
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:kifiya_challenge/core/services/hive_storage_service.dart';
+import 'package:kifiya_challenge/core/services/secure_storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../domain/usecases/login_user.dart';
@@ -13,9 +15,11 @@ part 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUser loginUser;
   final RegisterUser registerUser;
-  final SharedPreferences _prefs;
+  final SecureStorageService secureStorageService;
+  final HiveStorageService hiveStorageService;
 
-  AuthBloc(this.loginUser, this.registerUser, this._prefs) : super(AuthInitial()) {
+  AuthBloc(this.loginUser, this.registerUser, this.secureStorageService, this.hiveStorageService)
+    : super(AuthInitial()) {
     on<LoginRequested>(_onLoginRequested);
     on<RegisterRequested>(_onRegisterRequested);
     on<LogoutRequested>(_onLogoutRequested);
@@ -26,13 +30,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       final response = await loginUser(event.username, event.password);
-      
-      // Store tokens
-      await _prefs.setString('access_token', response.accessToken);
-      await _prefs.setString('refresh_token', response.refreshToken);
-      await _prefs.setInt('user_id', response.userId);
-      await _prefs.setString('username', response.username);
-      
+
+      // Persist tokens & user info
+      await secureStorageService.write(key: 'access_token', value: response.accessToken);
+      await secureStorageService.write(key: 'refresh_token', value: response.refreshToken);
+      await hiveStorageService.set('user_id', response.userId.toString());
+      await hiveStorageService.set('username', response.username);
+
       emit(AuthAuthenticated(response));
     } catch (e) {
       emit(AuthError(e.toString()));
@@ -50,7 +54,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         email: event.email,
         phoneNumber: event.phoneNumber,
       );
-      
       emit(AuthRegistered(response));
     } catch (e) {
       emit(AuthError(e.toString()));
@@ -58,28 +61,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onLogoutRequested(LogoutRequested event, Emitter<AuthState> emit) async {
-    await _prefs.remove('access_token');
-    await _prefs.remove('refresh_token');
-    await _prefs.remove('user_id');
-    await _prefs.remove('username');
-    
+    await secureStorageService.delete(key: 'access_token');
+    await secureStorageService.delete(key: 'refresh_token');
+    await hiveStorageService.delete('user_id');
+    await hiveStorageService.delete('username');
     emit(AuthUnauthenticated());
   }
 
   Future<void> _onCheckAuthStatus(CheckAuthStatus event, Emitter<AuthState> emit) async {
-    final token = _prefs.getString('access_token');
+    final token = await secureStorageService.read(key: 'access_token');
     if (token != null) {
-      final username = _prefs.getString('username') ?? '';
-      final userId = _prefs.getInt('user_id') ?? 0;
-      
+      final username = await hiveStorageService.get('username') ?? '';
+      final userId = int.tryParse(hiveStorageService.get('user_id') ?? '0') ?? 0;
+
       final mockResponse = LoginResponse(
         message: 'Already authenticated',
         username: username,
         userId: userId,
         accessToken: token,
-        refreshToken: _prefs.getString('refresh_token') ?? '',
+        refreshToken: await secureStorageService.read(key: 'refresh_token') ?? '',
       );
-      
+
       emit(AuthAuthenticated(mockResponse));
     } else {
       emit(AuthUnauthenticated());

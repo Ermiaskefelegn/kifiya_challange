@@ -7,6 +7,8 @@ import 'package:injectable/injectable.dart';
 import 'package:kifiya_challenge/core/services/hive_storage_service.dart';
 import 'package:kifiya_challenge/core/services/log_service.dart';
 import 'package:kifiya_challenge/core/services/secure_storage_service.dart';
+import 'package:kifiya_challenge/domain/usecases/login_user.dart';
+import 'package:kifiya_challenge/domain/usecases/register_user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/datasources/local/local_data_source.dart';
@@ -51,12 +53,7 @@ Future<void> configureDependencies() async {
     () => ApiRemoteDataSource(dioClient: getIt<DioClient>(), logService: getIt<LogService>()),
   );
   getIt.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSource(
-      dioClient: getIt<DioClient>(),
-      secureStorageService: getIt<SecureStorageService>(),
-      hiveStorageService: getIt<HiveStorageService>(),
-      logService: getIt<LogService>(),
-    ),
+    () => AuthRemoteDataSource(dioClient: getIt<DioClient>(), logService: getIt<LogService>()),
   );
 
   // Repositories
@@ -69,10 +66,15 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton(() => GetAccounts(getIt<AccountRepository>()));
   getIt.registerLazySingleton(() => GetTransactions(getIt<TransactionRepository>()));
   getIt.registerLazySingleton(() => TransferMoney(getIt<TransferRepository>()));
+  getIt.registerFactory<LoginUser>(() => LoginUser(getIt<AuthRepository>()));
+  getIt.registerFactory<RegisterUser>(() => RegisterUser(getIt<AuthRepository>()));
 
   // BLoCs
-  getIt.registerFactory(() => AuthBloc(getIt(), getIt(), getIt()));
-  getIt.registerFactory(() => AccountBloc(getIt()));
-  getIt.registerFactory(() => TransactionBloc(getIt()));
-  getIt.registerFactory(() => TransferBloc(getIt()));
+  getIt.registerFactory<AuthBloc>(
+    () =>
+        AuthBloc(getIt<LoginUser>(), getIt<RegisterUser>(), getIt<SecureStorageService>(), getIt<HiveStorageService>()),
+  );
+  getIt.registerFactory(() => AccountBloc(getIt<GetAccounts>()));
+  getIt.registerFactory(() => TransactionBloc(getIt<GetTransactions>()));
+  getIt.registerFactory(() => TransferBloc(getIt<TransferMoney>()));
 }

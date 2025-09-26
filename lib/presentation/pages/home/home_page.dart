@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:kifiya_challenge/core/di/dependency_Injection.dart';
+import 'package:kifiya_challenge/core/services/hive_storage_service.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../bloc/account/account_bloc.dart';
@@ -10,20 +12,40 @@ import '../../widgets/home/account_summary.dart';
 import '../../widgets/home/recent_transactions.dart';
 import '../transfer/transfer_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  late final HiveStorageService _hiveStorageService;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // ✅ get Hive service from GetIt (already initialized in main)
+    _hiveStorageService = getIt<HiveStorageService>();
+
+    // Example: you can fetch or log something on startup
+    final savedKeys = _hiveStorageService.getAllKeys();
+    debugPrint("Hive keys on HomePage init: $savedKeys");
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.textPrimary,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
-              const SizedBox(height: AppSpacing.lg),
+
               BlocBuilder<AccountBloc, AccountState>(
                 builder: (context, state) {
                   if (state is AccountLoaded && state.accounts.isNotEmpty) {
@@ -33,41 +55,57 @@ class HomePage extends StatelessWidget {
                   return const BalanceCard(balance: 0.0);
                 },
               ),
-              const SizedBox(height: AppSpacing.xl),
-              QuickActions(
-                onActionTap: (action) {
-                  if (action == 'transfer') {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const TransferPage()));
-                  }
-                },
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              BlocBuilder<AccountBloc, AccountState>(
-                builder: (context, state) {
-                  if (state is AccountLoaded) {
-                    return AccountSummary(
-                      accounts: state.accounts,
-                      onViewAll: () {
-                        // Navigate to accounts page
+              Container(
+                height: MediaQuery.of(context).size.height * 0.9,
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(AppSpacing.xxl),
+                    topRight: Radius.circular(AppSpacing.xxl),
+                  ),
+                  color: AppColors.surface,
+                ),
+
+                child: Column(
+                  children: [
+                    const SizedBox(height: AppSpacing.xl),
+                    QuickActions(
+                      onActionTap: (action) {
+                        if (action == 'transfer') {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const TransferPage()));
+                        }
                       },
-                    );
-                  }
-                  return const SizedBox();
-                },
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              BlocBuilder<TransactionBloc, TransactionState>(
-                builder: (context, state) {
-                  if (state is TransactionLoaded) {
-                    return RecentTransactions(
-                      transactions: state.transactions.take(2).toList(),
-                      onViewAll: () {
-                        // Navigate to transactions page
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    BlocBuilder<AccountBloc, AccountState>(
+                      builder: (context, state) {
+                        if (state is AccountLoaded) {
+                          return AccountSummary(
+                            accounts: state.accounts,
+                            onViewAll: () {
+                              // Navigate to accounts page
+                            },
+                          );
+                        }
+                        return const SizedBox();
                       },
-                    );
-                  }
-                  return const SizedBox();
-                },
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    BlocBuilder<TransactionBloc, TransactionState>(
+                      builder: (context, state) {
+                        if (state is TransactionLoaded) {
+                          return RecentTransactions(
+                            transactions: state.transactions.take(2).toList(),
+                            onViewAll: () {
+                              // Navigate to transactions page
+                            },
+                          );
+                        }
+                        return const SizedBox();
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -77,34 +115,45 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Good Morning!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Good Morning!',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.surface),
+              ),
+
+              Text(
+                _hiveStorageService.get<String>('username') ?? 'Guest',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.surface),
+              ),
+            ],
+          ),
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              color: AppColors.primary.withOpacity(0.1),
             ),
-          ],
-        ),
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(24), color: AppColors.primary.withOpacity(0.1)),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Image.network(
-              'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=150',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.person, color: AppColors.primary, size: 24);
-              },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Image.network(
+                'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=150',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.person, color: AppColors.primary, size: 24);
+                },
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
