@@ -5,6 +5,7 @@ import '../../bloc/transactions/transactions_bloc.dart';
 import '../../widgets/common/common_app_bar.dart';
 import '../../widgets/transactions/transactions_filters.dart';
 import '../../widgets/transactions/transactions_list.dart';
+import '../../widgets/transactions/transaction_error.dart';
 
 class TransactionsPage extends StatelessWidget {
   const TransactionsPage({super.key});
@@ -46,9 +47,7 @@ class TransactionsPage extends StatelessWidget {
                 }
 
                 if (state is TransactionError) {
-                  return Center(
-                    child: Text(state.message, style: const TextStyle(color: AppColors.error)),
-                  );
+                  return const TransactionErrorWidget();
                 }
 
                 return const SizedBox();
